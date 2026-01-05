@@ -1,8 +1,12 @@
-import 'package:app_banners_asiste/data/repositories_impletation/banner_repository_implemetation.dart';
-import 'package:app_banners_asiste/domain/models/banner_model.dart';
 import 'package:flutter/material.dart';
+import '../../domain/models/banner_model.dart';
+import '../../data/repositories_impletation/banner_repository_implemetation.dart';
 
 class BannerProvider extends ChangeNotifier {
+  static final BannerProvider _instance = BannerProvider._internal();
+  factory BannerProvider() => _instance;
+  BannerProvider._internal();
+
   final _repository = BannerRepositoryImpl();
   List<BannerModel> _banners = [];
   bool _isLoading = false;
@@ -21,20 +25,15 @@ class BannerProvider extends ChangeNotifier {
   void addBannerCustom({
     required String title,
     required String path,
-    required String id,
     required String url,
     required bool external,
   }) {
-    _banners.insert(
-      0,
-      BannerModel(
-        title: title,
-        imageUrl: path,
-        identifier: id.isEmpty ? 'manual_upload' : id,
-        openExternal: external,
-        url: url.isEmpty ? 'N/A' : url,
-      ),
-    );
+    _banners.insert(0, BannerModel(
+      title: title,
+      imageUrl: path,
+      url: url,
+      openExternal: external,
+    ));
     notifyListeners();
   }
 

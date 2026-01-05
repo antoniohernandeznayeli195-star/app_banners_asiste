@@ -64,7 +64,7 @@ class InicioPage extends StatelessWidget {
                       const SizedBox(height: 25),
                       _buildMenuButton(context, "Carrusel externo", "externo"),
                       const Spacer(),
-                      // Logo inferior
+                     
                       Padding(
                         padding: const EdgeInsets.only(bottom: 40),
                         child: Image.asset(

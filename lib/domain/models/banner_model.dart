@@ -1,28 +1,23 @@
 class BannerModel {
   final String title;
   final String imageUrl;
-  final String identifier;
-  final bool openExternal;
   final String url;
+  final bool openExternal;
 
   BannerModel({
     required this.title,
     required this.imageUrl,
-    required this.identifier,
-    required this.openExternal,
     required this.url,
+    required this.openExternal,
   });
 
   factory BannerModel.fromJson(Map<String, dynamic> json) {
-    final goToItem = json['GoToItem'] ?? {};
+    final Map<String, dynamic> goToItem = json['GoToItem'] ?? {};
     return BannerModel(
-      title: json['Title'] != null && json['Title'].toString().isNotEmpty 
-          ? json['Title'] 
-          : (goToItem['Title'] ?? 'Sin título'),
+      title: json['Title'] ?? '',
       imageUrl: json['ImageUrl'] ?? '',
-      identifier: goToItem['Identifier'] ?? 'N/A',
-      openExternal: goToItem['OpenExternal'] ?? false,
       url: goToItem['URL'] ?? 'N/A',
+      openExternal: goToItem['OpenExternal'] ?? true,
     );
   }
 }
