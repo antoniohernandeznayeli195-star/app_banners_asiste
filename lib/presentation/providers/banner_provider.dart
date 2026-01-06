@@ -28,12 +28,19 @@ class BannerProvider extends ChangeNotifier {
     required String url,
     required bool external,
   }) {
-    _banners.insert(0, BannerModel(
-      title: title,
-      imageUrl: path,
-      url: url,
-      openExternal: external,
-    ));
+    _banners.insert(
+      0,
+      BannerModel(
+        title: title,
+        imageUrl: path,
+        url: url,
+        openExternal: external,
+        body: '',
+        createdId: '',
+        goToTitle: '',
+        targetPageFlutter: '',
+      ),
+    );
     notifyListeners();
   }
 

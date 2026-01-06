@@ -27,12 +27,23 @@ class _BannerDetailPageState extends State<BannerDetailPage> {
     _openExternal = widget.banner.openExternal;
   }
 
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _urlController.dispose();
+    super.dispose();
+  }
+
   void _save() {
     final updated = BannerModel(
       title: _titleController.text,
       imageUrl: widget.banner.imageUrl,
       url: _urlController.text,
       openExternal: _openExternal,
+      body: widget.banner.body,
+      createdId: widget.banner.createdId,
+      goToTitle: widget.banner.goToTitle,
+      targetPageFlutter: widget.banner.targetPageFlutter,
     );
     context.read<BannerProvider>().updateBanner(widget.banner, updated);
     setState(() => _isEditing = false);
@@ -51,12 +62,17 @@ class _BannerDetailPageState extends State<BannerDetailPage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(_isEditing ? Icons.check : Icons.edit, color: Colors.white),
-            onPressed: () => _isEditing ? _save() : setState(() => _isEditing = true),
-          )
+            icon: Icon(
+              _isEditing ? Icons.check : Icons.edit,
+              color: Colors.white,
+            ),
+            onPressed: () =>
+                _isEditing ? _save() : setState(() => _isEditing = true),
+          ),
         ],
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 30),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -75,17 +91,54 @@ class _BannerDetailPageState extends State<BannerDetailPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 30),
+
+            const Padding(
+              padding: EdgeInsets.fromLTRB(25, 30, 25, 10),
+              child: Text(
+                "Propiedades Generales",
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
             _buildField("Título", _titleController),
-            _buildField("URL de Destino", _urlController),
+            _buildReadOnlyField("ImageUrl", widget.banner.imageUrl),
+            _buildReadOnlyField("Body", widget.banner.body),
+            _buildReadOnlyField("CreatedId", widget.banner.createdId),
+
+            const Padding(
+              padding: EdgeInsets.fromLTRB(25, 30, 25, 10),
+              child: Text(
+                "GoToItem",
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            _buildReadOnlyField("Título del destino", widget.banner.goToTitle),
+            _buildField("URL del destino", _urlController),
+            _buildReadOnlyField(
+              "Target Page Flutter",
+              widget.banner.targetPageFlutter,
+            ),
+
+            const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: SwitchListTile(
-                title: const Text("Abrir en navegador externo", 
-                  style: TextStyle(color: Colors.white, fontSize: 16)),
+                title: const Text(
+                  "Abrir en navegador externo",
+                  style: TextStyle(color: Colors.white, fontSize: 15),
+                ),
                 value: _openExternal,
                 activeColor: Colors.green,
-                onChanged: _isEditing ? (val) => setState(() => _openExternal = val) : null,
+                onChanged: _isEditing
+                    ? (val) => setState(() => _openExternal = val)
+                    : null,
               ),
             ),
           ],
@@ -96,7 +149,7 @@ class _BannerDetailPageState extends State<BannerDetailPage> {
 
   Widget _buildField(String label, TextEditingController controller) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
       child: TextField(
         controller: controller,
         enabled: _isEditing,
@@ -104,9 +157,38 @@ class _BannerDetailPageState extends State<BannerDetailPage> {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: Colors.white70),
-          enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white38)),
-          focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.green)),
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white38),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.green),
+          ),
+          disabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white10),
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            value.isEmpty ? "N/A" : value,
+            style: const TextStyle(color: Colors.white, fontSize: 15),
+          ),
+          const SizedBox(height: 5),
+          const Divider(color: Colors.white10, height: 1),
+        ],
       ),
     );
   }
@@ -116,13 +198,28 @@ class _BannerDetailPageState extends State<BannerDetailPage> {
       return Image.network(
         url,
         fit: BoxFit.contain,
-        errorBuilder: (c, e, s) => const Icon(Icons.broken_image, size: 80, color: Colors.grey),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                  : null,
+              strokeWidth: 2,
+              color: Colors.green,
+            ),
+          );
+        },
+        errorBuilder: (c, e, s) =>
+            const Icon(Icons.broken_image, size: 80, color: Colors.grey),
       );
     }
     return Image.file(
       File(url),
       fit: BoxFit.contain,
-      errorBuilder: (c, e, s) => const Icon(Icons.broken_image, size: 80, color: Colors.grey),
+      errorBuilder: (c, e, s) =>
+          const Icon(Icons.broken_image, size: 80, color: Colors.grey),
     );
   }
 }

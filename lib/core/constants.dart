@@ -1,0 +1,5 @@
+class Constants {
+  static const String apiBaseUrl = "https://pushapipmx.azurewebsites.net/api/blob-json";
+  static const String bannerInterno = "content/menu/news.qa.json";
+  static const String bannerExterno = "content/menu/login_news.qa.json";
+}
