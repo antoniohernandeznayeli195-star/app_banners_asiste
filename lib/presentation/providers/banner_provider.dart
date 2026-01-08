@@ -22,26 +22,31 @@ class BannerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addBannerCustom({
+  Future<void> addBannerCustom({
     required String title,
     required String path,
     required String url,
     required bool external,
-  }) {
-    _banners.insert(
-      0,
-      BannerModel(
-        title: title,
-        imageUrl: path,
-        url: url,
-        openExternal: external,
-        body: '',
-        createdId: '',
-        goToTitle: '',
-        targetPageFlutter: '',
-      ),
-    );
+    String typeToReload = "interno",
+  }) async {
+    _isLoading = true;
     notifyListeners();
+
+    final success = await _repository.uploadBanner(
+      title: title,
+      imagePath: path,
+      targetUrl: url,
+      external: external,
+      bodyText: "",
+      targetPage: "",
+    );
+
+    if (success) {
+      await loadBanners(typeToReload);
+    } else {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   void reorderBanners(int oldIndex, int newIndex) {
