@@ -5,7 +5,6 @@ import 'package:dio/io.dart';
 //import 'package:dio/io.dart';
 //import 'package:flutter/foundation.dart';
 
-
 class ApiService {
   String baseUrl = Constants.apiBaseUrl;
 
@@ -109,7 +108,30 @@ class ApiService {
 
   Future<Response> postRequest(String endpoint, dynamic data) async {
     try {
-      return await _dio!.post(endpoint, data: data);
+      return await _dio!.post(
+        endpoint,
+        data: data,
+        options: Options(
+          contentType: (data is FormData)
+              ? 'multipart/form-data'
+              : 'application/json',
+        ),
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> uploadImage(String endpoint, File imageFile) async {
+    try {
+      String fileName = imageFile.path.split('/').last;
+      FormData formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: fileName,
+        ),
+      });
+      return await _dio!.post(endpoint, data: formData);
     } catch (e) {
       rethrow;
     }
