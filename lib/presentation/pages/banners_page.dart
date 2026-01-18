@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:app_banners_asiste/presentation/pages/banner_add_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -26,6 +27,35 @@ class _BannersPageState extends State<BannersPage> {
     });
   }
 
+  Future<void> _handleNewBannerFlow() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+
+    final provider = context.read<BannerProvider>();
+
+    try {
+      final String? remoteUrl = await provider.uploadTempImage(image.path);
+
+      if (remoteUrl != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BannerAddPage(imageUrl: remoteUrl),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<BannerProvider>();
@@ -41,24 +71,21 @@ class _BannersPageState extends State<BannersPage> {
         title: Image.asset(
           'assets/images/pemex_logo.png',
           height: 35,
-          errorBuilder: (c, e, s) =>
-              const Text("Banners", style: TextStyle(color: Colors.black)),
+          errorBuilder: (c, e, s) => const Text(
+            "Banners",
+            style: TextStyle(color: Colors.black),
+          ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black, size: 30),
-            onPressed: () async {
-              final XFile? image = await _picker.pickImage(
-                source: ImageSource.gallery,
-              );
-              if (image != null) _showAddBannerForm(image.path);
-            },
+            onPressed: _handleNewBannerFlow,
           ),
         ],
       ),
       body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : ReorderableListView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               onReorder: provider.reorderBanners,
@@ -71,7 +98,7 @@ class _BannersPageState extends State<BannersPage> {
 
   Widget _buildCard(BannerModel banner, BannerProvider provider) {
     return GestureDetector(
-      key: ValueKey(banner.imageUrl + banner.title),
+      key: ValueKey("${banner.imageUrl}${banner.title}"),
       behavior: HitTestBehavior.opaque,
       onTap: () {
         Navigator.push(
@@ -101,32 +128,17 @@ class _BannersPageState extends State<BannersPage> {
                 Positioned(
                   top: 10,
                   right: 10,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          spreadRadius: 1,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      backgroundColor: const Color.fromARGB(255, 230, 230, 230),
-                      radius: 18,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          provider.removeBanner(banner);
-                        },
+                  child: CircleAvatar(
+                    backgroundColor: const Color.fromARGB(255, 230, 230, 230),
+                    radius: 18,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: 20,
                       ),
+                      onPressed: () => provider.removeBanner(banner),
                     ),
                   ),
                 ),
@@ -161,22 +173,9 @@ class _BannersPageState extends State<BannersPage> {
     if (url.startsWith('http') || kIsWeb) {
       return Image.network(
         url,
-        fit: BoxFit.contain,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            height: 150,
-            alignment: Alignment.center,
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                  : null,
-              strokeWidth: 2,
-              color: Colors.green,
-            ),
-          );
-        },
+        height: 150,
+        width: double.infinity,
+        fit: BoxFit.cover,
         errorBuilder: (c, e, s) => const SizedBox(
           height: 150,
           child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
@@ -185,78 +184,9 @@ class _BannersPageState extends State<BannersPage> {
     }
     return Image.file(
       File(url),
-      fit: BoxFit.contain,
-      errorBuilder: (c, e, s) => const SizedBox(
-        height: 150,
-        child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
-      ),
-    );
-  }
-
-  Future<void> _showAddBannerForm(String imagePath) async {
-    final titleController = TextEditingController();
-    final urlController = TextEditingController();
-    bool openExternal = false;
-    return showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF1E2124),
-          title: const Text(
-            "Nuevo Banner",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: "Título",
-                    labelStyle: TextStyle(color: Colors.white70),
-                  ),
-                ),
-                TextField(
-                  controller: urlController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: "URL",
-                    labelStyle: TextStyle(color: Colors.white70),
-                  ),
-                ),
-                SwitchListTile(
-                  title: const Text(
-                    "Abrir Externo",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  value: openExternal,
-                  onChanged: (v) => setState(() => openExternal = v),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancelar"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                context.read<BannerProvider>().addBannerCustom(
-                  title: titleController.text,
-                  path: imagePath,
-                  url: urlController.text,
-                  external: openExternal,
-                );
-                Navigator.pop(context);
-              },
-              child: const Text("Guardar"),
-            ),
-          ],
-        ),
-      ),
+      height: 150,
+      width: double.infinity,
+      fit: BoxFit.cover,
     );
   }
 }

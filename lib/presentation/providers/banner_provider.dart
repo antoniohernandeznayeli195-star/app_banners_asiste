@@ -10,6 +10,8 @@ class BannerProvider extends ChangeNotifier {
   final _repository = BannerRepositoryImpl();
   List<BannerModel> _banners = [];
   bool _isLoading = false;
+  String? _url ;
+  String? get url => _url;
 
   List<BannerModel> get banners => _banners;
   bool get isLoading => _isLoading;
@@ -22,25 +24,31 @@ class BannerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addBannerCustom({
-    required String title,
-    required String path,
-    required String url,
-    required bool external,
-  }) {
-    _banners.insert(
-      0,
-      BannerModel(
-        title: title,
-        imageUrl: path,
-        url: url,
-        openExternal: external,
-        body: '',
-        createdId: '',
-        goToTitle: '',
-        targetPageFlutter: '',
-      ),
-    );
+    uploadTempImage(String path) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final imageUrl = await _repository.uploadImageOnly(path);
+      _isLoading = false;
+      notifyListeners();
+      return imageUrl;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      print(e.toString());
+      rethrow;
+    }
+    
+  }
+
+  Future<void> confirmAddBanner(BannerModel banner) async {
+    _isLoading = true;
+    notifyListeners();
+    final success = await _repository.saveFullBanner(banner);
+    if (success) {
+      await loadBanners("interno");
+    }
+    _isLoading = false;
     notifyListeners();
   }
 
@@ -51,9 +59,12 @@ class BannerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeBanner(BannerModel banner) {
-    _banners.remove(banner);
-    notifyListeners();
+  Future<void> removeBanner(BannerModel banner) async {
+    final success = await _repository.removeBanner(banner.title);
+    if (success) {
+      _banners.remove(banner);
+      notifyListeners();
+    }
   }
 
   void updateBanner(BannerModel oldBanner, BannerModel newBanner) {
