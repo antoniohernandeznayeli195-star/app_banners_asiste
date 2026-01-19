@@ -41,10 +41,18 @@ class BannerProvider extends ChangeNotifier {
     
   }
 
-  Future<void> confirmAddBanner(BannerModel banner) async {
+  Future<void> confirmAddBanner(BannerModel banner, {int? index}) async {
     _isLoading = true;
     notifyListeners();
+
+    if (index != null && index <= _banners.length) {
+      _banners.insert(index, banner);
+    } else {
+      _banners.add(banner);
+    }
+
     final success = await _repository.saveFullBanner(banner);
+    
     if (success) {
       await loadBanners("interno");
     }

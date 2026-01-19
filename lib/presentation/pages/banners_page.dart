@@ -40,7 +40,7 @@ class _BannersPageState extends State<BannersPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => BannerAddPage(imageUrl: remoteUrl),
+            builder: (context) => BannerAddPage(imageUrl: remoteUrl, existingBanners: provider.banners,),
           ),
         );
       }
