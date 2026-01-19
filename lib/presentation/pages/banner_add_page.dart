@@ -3,9 +3,32 @@ import 'package:app_banners_asiste/presentation/providers/banner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+class InsertPosition { // Clase para meter la posicion de la imagen
+  final String label;
+  final int index;
+  InsertPosition({required this.label, required this.index});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InsertPosition &&
+          runtimeType == other.runtimeType &&
+          label == other.label &&
+          index == other.index;
+
+  @override
+  int get hashCode => label.hashCode ^ index.hashCode; 
+}
+
 class BannerAddPage extends StatefulWidget {
   final String imageUrl;
-  const BannerAddPage({super.key, required this.imageUrl});
+  final List<BannerModel> existingBanners;
+
+  const BannerAddPage({
+    super.key,
+    required this.imageUrl,
+    required this.existingBanners,
+  });
 
   @override
   State<BannerAddPage> createState() => _BannerAddPageState();
@@ -17,6 +40,41 @@ class _BannerAddPageState extends State<BannerAddPage> {
   final targetPageController = TextEditingController();
   final createdIdController = TextEditingController();
   bool openExternal = false;
+
+  late List<InsertPosition> _options;
+  late InsertPosition selectedPosition;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _options = buildInsertOptions();
+    selectedPosition = _options.last;
+    /*selectedPosition = InsertPosition(
+      label: 'Al final',
+      index: widget.existingBanners.length,
+    );*/
+  }
+
+  List<InsertPosition> buildInsertOptions() {
+    final options = <InsertPosition>[];
+    options.add(InsertPosition(label: 'Al inicio', index: 0));
+    for (int i = 0; i < widget.existingBanners.length; i++) {
+      options.add(
+        InsertPosition(
+          label: 'Posición ${i + 2}: Después de "${widget.existingBanners[i].title}"',
+          index: i + 1,
+        ),
+      );
+    }
+    if (widget.existingBanners.isNotEmpty) {
+      options.add(InsertPosition(
+        label: 'Al final',
+        index: widget.existingBanners.length,
+      ));
+    }
+    return options;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,23 +100,24 @@ class _BannerAddPageState extends State<BannerAddPage> {
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(height: 30),
-            
+            const SizedBox(height: 15),
+            _buildPositionSelector(),
+            const SizedBox(height: 20),
             _buildLabel("Título"),
             _buildTextField(titleController, "Escribe el título..."),
-            
             _buildLabel("Cuerpo (Body)"),
             _buildTextField(bodyController, "Descripción corta...", maxLines: 3),
-
             _buildLabel("URL Destino (Solo lectura)"),
-            _buildTextField(TextEditingController(text: widget.imageUrl), "", readOnly: true, maxLines: null),
-
+            _buildTextField(
+              TextEditingController(text: widget.imageUrl),
+              "",
+              readOnly: true,
+              maxLines: null,
+            ),
             _buildLabel("Página Flutter (Target)"),
             _buildTextField(targetPageController, "ej. /details_page"),
-
             _buildLabel("ID de Creador"),
             _buildTextField(createdIdController, "Nombre o ID"),
-
             const SizedBox(height: 10),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -67,8 +126,6 @@ class _BannerAddPageState extends State<BannerAddPage> {
               activeColor: Colors.green,
               onChanged: (v) => setState(() => openExternal = v),
             ),
-
-            
             const SizedBox(height: 40),
             Row(
               children: [
@@ -102,8 +159,10 @@ class _BannerAddPageState extends State<BannerAddPage> {
                         goToTitle: titleController.text,
                         targetPageFlutter: targetPageController.text,
                       );
-                      
-                      await context.read<BannerProvider>().confirmAddBanner(newBanner);
+                      await context.read<BannerProvider>().confirmAddBanner(
+                        newBanner,
+                        index: selectedPosition.index,
+                      );
                       if (mounted) Navigator.pop(context);
                     },
                     child: const Text("Finalizar", style: TextStyle(fontSize: 16, color: Colors.white)),
@@ -114,6 +173,55 @@ class _BannerAddPageState extends State<BannerAddPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPositionSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E2124),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text(
+            "Elige la posicion",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+        ),
+        const SizedBox(height: 5),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2C2F33),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<InsertPosition>(
+              value: selectedPosition,
+              dropdownColor: const Color(0xFF2C2F33),
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+              isExpanded: true,
+              items: _options.map((pos) {
+                return DropdownMenuItem(
+                  value: pos,
+                  child: Text(
+                    pos.label,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) setState(() => selectedPosition = value);
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
