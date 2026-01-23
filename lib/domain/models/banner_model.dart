@@ -32,4 +32,19 @@ class BannerModel {
       openExternal: goToItem['OpenExternal'] ?? true,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'Title': title,
+      'ImageUrl': imageUrl,
+      'Body': body,
+      'Created': createdId,
+      'GoToItem': {
+        'Title': goToTitle,
+        'URL': url,
+        'TargetPageFlutter': targetPageFlutter,
+        'OpenExternal': openExternal,
+      },
+    };
+  }
 }

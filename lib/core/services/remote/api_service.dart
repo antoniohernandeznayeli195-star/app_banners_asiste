@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:app_banners_asiste/core/constants.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
-//import 'package:dio/io.dart';
-//import 'package:flutter/foundation.dart';
 
 class ApiService {
   String baseUrl = Constants.apiBaseUrl;
@@ -25,11 +23,7 @@ class ApiService {
       ),
     );
 
-    // 👇 Saltar validación SSL SOLO para desarrollo
-
     final adapter = IOHttpClientAdapter();
-
-    // if (kDebugMode) {
 
     adapter.createHttpClient = () {
       final client = HttpClient();
@@ -40,33 +34,7 @@ class ApiService {
       return client;
     };
 
-    // }
-
     _dio?.httpClientAdapter = adapter;
-
-    //_dio?.interceptors.add(AuthInterceptor());
-
-    //_dio?.interceptors.add(DioLoggerInterceptor());
-
-    /*_dio?.interceptors.add(
-      PrettyDioLogger(
-        requestHeader: true,
-
-        requestBody: true,
-
-        responseBody: true,
-
-        responseHeader: false,
-
-        error: true,
-
-        compact: true,
-
-        maxWidth: 90,
-
-        enabled: kDebugMode,
-      ),
-    );*/
   }
 
   Future<Response> getRequest(
@@ -101,6 +69,18 @@ class ApiService {
 
         extra: response.extra,
       );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> putRequest(
+    String endpoint, {
+    Map<String, dynamic>? params,
+    dynamic data,
+  }) async {
+    try {
+      return await _dio!.put(endpoint, queryParameters: params, data: data);
     } catch (e) {
       rethrow;
     }
