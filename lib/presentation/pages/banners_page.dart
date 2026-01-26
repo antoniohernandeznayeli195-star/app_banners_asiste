@@ -28,25 +28,40 @@ class _BannerPageState extends State<BannerPage> {
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null && mounted) {
-      final bool confirmUpload = await showDialog(
+      final bool confirmUpload =
+          await showDialog(
             context: context,
             builder: (context) => AlertDialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               title: const Text("Confirmar Imagen"),
-              content: const Text("¿Estás segura de que deseas subir esta imagen al servidor?"),
+              content: const Text(
+                "¿Estás segura de que deseas subir esta imagen al servidor?",
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text("Cancelar", style: TextStyle(color: Colors.black54)),
+                  child: const Text(
+                    "Cancelar",
+                    style: TextStyle(color: Colors.black54),
+                  ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text("Aceptar", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "Aceptar",
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ) ?? false;
+          ) ??
+          false;
 
       if (!confirmUpload) return;
 
@@ -85,7 +100,11 @@ class _BannerPageState extends State<BannerPage> {
           height: 35,
           errorBuilder: (context, error, stackTrace) => const Text(
             "PEMEX",
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
         ),
         centerTitle: true,
@@ -101,7 +120,8 @@ class _BannerPageState extends State<BannerPage> {
           : ReorderableListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               itemCount: provider.banners.length,
-              onReorder: (oldIndex, newIndex) => provider.reorderBanners(oldIndex, newIndex),
+              onReorder: (oldIndex, newIndex) =>
+                  provider.reorderBanners(oldIndex, newIndex),
               itemBuilder: (context, index) {
                 final banner = provider.banners[index];
                 return Container(
@@ -116,7 +136,9 @@ class _BannerPageState extends State<BannerPage> {
                       Stack(
                         children: [
                           ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(30),
+                            ),
                             child: Image.network(
                               banner.imageUrl,
                               height: 190,
@@ -129,24 +151,61 @@ class _BannerPageState extends State<BannerPage> {
                             right: 15,
                             child: GestureDetector(
                               onTap: () async {
-                                final bool confirm = await showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                    title: const Text("Eliminar"),
-                                    content: const Text("¿Deseas eliminar este banner?"),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancelar")),
-                                      TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Aceptar")),
-                                    ],
-                                  ),
-                                ) ?? false;
+                                final bool confirm =
+                                    await showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        title: const Text("Eliminar"),
+                                        content: const Text(
+                                          "¿Deseas eliminar este banner?",
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text("Cancelar"),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
+                                            child: const Text("Aceptar"),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
                                 if (confirm) provider.removeBanner(banner);
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                child: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                  size: 20,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(1.5, 1.5),
+                                      blurRadius: 2.0,
+                                      color: Colors.black38,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -155,11 +214,17 @@ class _BannerPageState extends State<BannerPage> {
                       InkWell(
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => BannerDetailPage(banner: banner)),
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                BannerDetailPage(banner: banner),
+                          ),
                         ),
                         child: Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 15),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 22,
+                            horizontal: 15,
+                          ),
                           child: Text(
                             banner.title,
                             textAlign: TextAlign.center,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../domain/models/banner_model.dart';
 import '../../data/repositories_impletation/banner_repository_implemetation.dart';
 import '../../core/constants.dart';
-import '../../core/services/remote/api_service.dart';
 
 class BannerProvider extends ChangeNotifier {
   static final BannerProvider _instance = BannerProvider._internal();
@@ -10,7 +9,6 @@ class BannerProvider extends ChangeNotifier {
   BannerProvider._internal();
 
   final _repository = BannerRepositoryImpl();
-  final _apiService = ApiService();
 
   List<BannerModel> _banners = [];
   bool _isLoading = false;
@@ -34,18 +32,11 @@ class BannerProvider extends ChangeNotifier {
   Future<void> saveBannersToApi() async {
     _setLoading(true);
     try {
-      final List<Map<String, dynamic>> data = _banners
-          .map((b) => b.toJson())
-          .toList();
       final String blobPath = (_currentType == "interno")
           ? Constants.bannerInterno
           : Constants.bannerExterno;
 
-      await _apiService.putRequest(
-        "/update",
-        params: {'blobName': blobPath},
-        data: data,
-      );
+      await _repository.putBanners(blobPath, _banners);
     } catch (e) {
       debugPrint("Error: $e");
       rethrow;
