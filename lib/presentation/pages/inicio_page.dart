@@ -64,7 +64,6 @@ class InicioPage extends StatelessWidget {
                       const SizedBox(height: 25),
                       _buildMenuButton(context, "Carrusel externo", "externo"),
                       const Spacer(),
-                     
                       Padding(
                         padding: const EdgeInsets.only(bottom: 40),
                         child: Image.asset(
@@ -95,7 +94,7 @@ class InicioPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => BannersPage(type: type),
+              builder: (context) => BannerPage(initialType: type),
             ),
           );
         },

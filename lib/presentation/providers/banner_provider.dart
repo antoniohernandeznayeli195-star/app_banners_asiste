@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/banner_model.dart';
 import '../../data/repositories_impletation/banner_repository_implemetation.dart';
+import '../../core/constants.dart';
 
 class BannerProvider extends ChangeNotifier {
   static final BannerProvider _instance = BannerProvider._internal();
@@ -8,78 +9,79 @@ class BannerProvider extends ChangeNotifier {
   BannerProvider._internal();
 
   final _repository = BannerRepositoryImpl();
+
   List<BannerModel> _banners = [];
   bool _isLoading = false;
-  String? _url ;
-  String? get url => _url;
+  String _currentType = "interno";
 
   List<BannerModel> get banners => _banners;
   bool get isLoading => _isLoading;
 
-  Future<void> loadBanners(String type) async {
-    _isLoading = true;
-    notifyListeners();
-    _banners = await _repository.getBanners(type);
-    _isLoading = false;
+  void _setLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
   }
 
-    uploadTempImage(String path) async {
-    _isLoading = true;
-    notifyListeners();
+  Future<void> loadBanners(String type) async {
+    _setLoading(true);
+    _currentType = type;
+    _banners = await _repository.getBanners(type);
+    _setLoading(false);
+  }
+
+  Future<void> saveBannersToApi() async {
+    _setLoading(true);
     try {
-      final imageUrl = await _repository.uploadImageOnly(path);
-      _isLoading = false;
-      notifyListeners();
-      return imageUrl;
+      final String blobPath = (_currentType == "interno")
+          ? Constants.bannerInterno
+          : Constants.bannerExterno;
+
+      await _repository.putBanners(blobPath, _banners);
     } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      print(e.toString());
+      debugPrint("Error: $e");
       rethrow;
+    } finally {
+      _setLoading(false);
     }
-    
   }
 
   Future<void> confirmAddBanner(BannerModel banner, {int? index}) async {
-    _isLoading = true;
-    notifyListeners();
-
     if (index != null && index <= _banners.length) {
       _banners.insert(index, banner);
     } else {
       _banners.add(banner);
     }
-
-    final success = await _repository.saveFullBanner(banner);
-    
-    if (success) {
-      await loadBanners("interno");
-    }
-    _isLoading = false;
     notifyListeners();
+    await saveBannersToApi();
   }
 
-  void reorderBanners(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) newIndex -= 1;
-    final item = _banners.removeAt(oldIndex);
-    _banners.insert(newIndex, item);
-    notifyListeners();
-  }
-
-  Future<void> removeBanner(BannerModel banner) async {
-    final success = await _repository.removeBanner(banner.title);
-    if (success) {
-      _banners.remove(banner);
-      notifyListeners();
-    }
-  }
-
-  void updateBanner(BannerModel oldBanner, BannerModel newBanner) {
+  Future<void> updateBanner(
+    BannerModel oldBanner,
+    BannerModel newBanner,
+  ) async {
     final index = _banners.indexOf(oldBanner);
     if (index != -1) {
       _banners[index] = newBanner;
       notifyListeners();
+      await saveBannersToApi();
     }
+  }
+
+  Future<void> removeBanner(BannerModel banner) async {
+    _banners.remove(banner);
+    notifyListeners();
+    await saveBannersToApi();
+  }
+
+  void reorderBanners(int oldIndex, int newIndex) async {
+    if (oldIndex < newIndex) newIndex -= 1;
+    final item = _banners.removeAt(oldIndex);
+    _banners.insert(newIndex, item);
+    notifyListeners();
+    await saveBannersToApi();
+  }
+
+  Future<String?> uploadTempImage(String path) async {
+    return await _repository.uploadImageOnly(path);
   }
 }
